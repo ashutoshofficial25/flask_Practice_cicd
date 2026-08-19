@@ -22,6 +22,16 @@ def index():
     students = mongo.db.students.find()
     return render_template('index.html', students=students)
 
+# check mongo connection
+@app.route('/health')
+def health_check():
+    try:
+        # Attempt to retrieve server information to check the connection
+        mongo.db.command("ping")
+        return "MongoDB connection is healthy.", 200
+    except Exception as e:
+        return f"MongoDB connection failed: {str(e)}", 500
+
 # Add student
 @app.route('/add', methods=['GET', 'POST'])
 def add_student():

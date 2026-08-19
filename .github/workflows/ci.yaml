@@ -1,0 +1,49 @@
+name: CI-CD-Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest
+
+      # build docker image with tagged - push to ecr
+      - name: Build Docker image
+        run: |
+          docker build -t py-app .
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 616532575158.dkr.ecr.ap-south-1.amazonaws.com
+      - name: Tag and push Docker image
+        run: |
+          docker tag py-app:latest 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
+          docker push 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
+
+      # Pull latest docker image from ecr to ec2 instance and run the container with latest version
+      - name: Pull and run Docker image on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /path/to/your/key.pem ec2-user@your-ec2-instance-public-dns "docker pull 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest && docker run -d 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest"
+
+      - name: Health check
+        run: |
+          sleep 10 # Wait for the container to start
+          curl -f http://13.233.190.21:5000/health || exit 1

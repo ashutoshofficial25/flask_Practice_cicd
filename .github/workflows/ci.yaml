@@ -58,4 +58,4 @@ jobs:
       - name: Health check
         run: |
           sleep 10 # Wait for the container to start
-          curl -f http://13.233.190.21:5000/health || exit 1
+          curl -f http://13.201.72.173:5000/health || exit 1

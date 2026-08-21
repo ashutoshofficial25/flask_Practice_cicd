@@ -52,7 +52,7 @@ jobs:
           docker tag py-app:latest \
           616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
 
-          docker push 
+          docker push \
           616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
       - name: Pull in EC2 and run the Docker container
         run: |

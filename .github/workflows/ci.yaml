@@ -54,9 +54,21 @@ jobs:
 
           docker push \
           616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
-      - name: Pull in EC2 and run the Docker container
+      - name: Write SSH key
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_SECRET_KEY }} ${{secrets.SSH_USER}}@${{secrets.SERVER_HOST}} << 'EOF'
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_SECRET_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Log in to ECR on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 616532575158.dkr.ecr.ap-south-1.amazonaws.com
+          EOF
+
+      - name: Pull and redeploy on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
           docker pull 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
           docker stop py-app || true
           docker rm py-app || true

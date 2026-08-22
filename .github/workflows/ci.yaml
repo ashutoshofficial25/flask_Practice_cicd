@@ -72,8 +72,9 @@ jobs:
           docker pull 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
           docker stop py-app || true
           docker rm py-app || true
-          docker run -d -p 5000:5000 --name py-app 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
+          docker run -d -p 5000:5000 --name py-app -e MONGO_URI="${{ secrets.MONGO_URI }}" 616532575158.dkr.ecr.ap-south-1.amazonaws.com/py-app:latest
           EOF
+
       - name: Health check
         run: |
           sleep 10 # Wait for the container to start
